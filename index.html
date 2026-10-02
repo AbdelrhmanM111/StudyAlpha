@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operations & Performance Management Playbook</title>
+  
+  <!-- Standard Tailwind CSS for GitHub Pages compatibility -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    /* Base Theme Variables */
+    :root {
+      --background: #f8fafc;
+      --foreground: #0f172a;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --primary-foreground: #ffffff;
+      --muted-foreground: #64748b;
+      --accent: #f1f5f9;
+      --content: #f8fafc;
+      --secondary: #e2e8f0;
+      --secondary-foreground: #1e293b;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Tab Styles */
+    .main-tab { transition: all 0.3s ease; }
+    .main-tab.active {
+      border-bottom-color: var(--primary);
+      color: var(--primary);
+      background-color: transparent;
+    }
+    .main-tab:not(.active) {
+      border-bottom-color: transparent;
+      color: var(--muted-foreground);
+    }
+    .main-tab:not(.active):hover {
+      background-color: var(--accent);
+    }
+
+    /* Quiz Styles */
+    .opt-btn { transition: all 0.2s; }
+    .opt-btn:hover { transform: translateX(4px); }
+    .opt-btn.correct { background: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+    .opt-btn.wrong { background: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+    .opt-btn.reveal { border-color: #22c55e !important; background: rgba(34,197,94,0.15) !important; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .phase-btn.active { background: var(--primary); color: var(--primary-foreground); }
+    .phase-btn.completed { background: #22c55e; color: white; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+
+    /* Playbook Styles */
+    .chapter-btn.active { background: var(--primary); color: var(--primary-foreground); }
+    .chapter-content { display: none; animation: fadeIn 0.3s ease-in;}
+    .chapter-content.active { display: block; }
+    details summary { cursor: pointer; user-select: none; }
+    details summary::-webkit-details-marker { display: none; }
+    details[open] summary .arrow { transform: rotate(90deg); }
+    .formula-box {
+      background: var(--content);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 8px 0;
+      font-family: monospace;
+    }
+    .example-box {
+      background: var(--accent);
+      border-left: 3px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      margin: 8px 0;
+    }
+    .key-point {
+      background: var(--secondary);
+      color: var(--secondary-foreground);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin: 6px 0;
+      font-weight: 500;
+    }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; margin-bottom: 10px;}
+    th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+    th { background: var(--content); font-weight: 600; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="p-0 m-0">
+
+  <div class="max-w-4xl mx-auto min-h-screen bg-[var(--background)] sm:shadow-lg sm:border-x border-[var(--border)] relative flex flex-col">
+    
+    <!-- Top Navigation Tabs (Sticky for Mobile) -->
+    <div class="flex border-b border-[var(--border)] bg-[var(--card)] sticky top-0 z-20 shadow-sm">
+      <button id="tab-playbook" class="main-tab active flex-1 py-4 text-center font-bold sm:text-lg text-base border-b-4 focus:outline-none" onclick="switchMainTab('playbook')">
+        📖 Study Playbook
+      </button>
+      <button id="tab-quiz" class="main-tab flex-1 py-4 text-center font-bold sm:text-lg text-base border-b-4 focus:outline-none" onclick="switchMainTab('quiz')">
+        🧠 Quiz Center
+      </button>
+    </div>
+
+    <!-- ==================== VIEW 1: PLAYBOOK ==================== -->
+    <div id="view-playbook" class="flex-1 w-full pt-4">
+      
+      <!-- Header -->
+      <div class="bg-[var(--card)] border-b border-[var(--border)] p-4 sm:p-6 mb-4 mx-4 rounded-xl shadow-sm">
+        <h1 class="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Team Leader Assessment Playbook</h1>
+        <p class="text-[var(--muted-foreground)] text-sm mt-1">Complete study guide — Summarized &amp; covers all topics</p>
+      </div>
+
+      <!-- Chapter Navigation -->
+      <div class="px-4 mb-4 flex flex-wrap gap-2" id="nav">
+        <button onclick="showChapter(0)" class="chapter-btn active px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] transition-all flex-grow sm:flex-grow-0">Ch.1 Performance Mgmt</button>
+        <button onclick="showChapter(1)" class="chapter-btn px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-[var(--card)] transition-all flex-grow sm:flex-grow-0">Ch.2 Coaching Mastery</button>
+        <button onclick="showChapter(2)" class="chapter-btn px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-[var(--card)] transition-all flex-grow sm:flex-grow-0">Ch.3 RCA &amp; Problem Solving</button>
+        <button onclick="showChapter(3)" class="chapter-btn px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-[var(--card)] transition-all flex-grow sm:flex-grow-0">Ch.4 Operational KPIs</button>
+        <button onclick="showChapter(4)" class="chapter-btn px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-[var(--card)] transition-all flex-grow sm:flex-grow-0">Ch.5 Financial Mgmt</button>
+        <button onclick="showChapter(5)" class="chapter-btn px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-[var(--card)] transition-all flex-grow sm:flex-grow-0">Ch.6 Quick Reference</button>
+      </div>
+
+      <div class="px-4 pb-8">
+        <!-- CHAPTER 1 -->
+        <div class="chapter-content active" id="ch0">
+          <div class="bg-[var(--card)] rounded-xl border border-[var(--border)] p-4 sm:p-6 mb-4 shadow-sm">
+            <h2 class="text-xl font-bold mb-1">Chapter 1: Performance Management</h2>
+            <p class="text-[var(--muted-foreground)] text-sm mb-4">The foundation — understanding what performance management is and how to segment your team.</p>
+
+            <details open class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 1.1 — The 4 Key Components
+              </summary>
+              <div class="pl-6 mt-2">
+                <p class="text-sm text-[var(--muted-foreground)] mb-3">Performance management is a continuous cycle, not a one-time event. It has 4 stages:</p>
+                <div class="overflow-x-auto">
+                  <table class="text-sm min-w-full">
+                    <tr><th style="width:30px">#</th><th>Component</th><th>Summary</th></tr>
+                    <tr><td class="text-center font-bold">1</td><td><strong>Performance Planning</strong></td><td>Setting organizational goals &amp; objectives for the performance cycle. This is where targets are defined.</td></tr>
+                    <tr><td class="text-center font-bold">2</td><td><strong>Developing &amp; Reviewing</strong></td><td>Creating personal development plans for each team member and conducting structured performance reviews.</td></tr>
+                    <tr><td class="text-center font-bold">3</td><td><strong>Monitoring</strong></td><td>Regularly tracking employee progress against goals using data (DPR, monitoring, spot checks).</td></tr>
+                    <tr><td class="text-center font-bold">4</td><td><strong>Recognition &amp; Rewards</strong></td><td>Providing ratings and recognizing high-performing employees through incentives and acknowledgement.</td></tr>
+                  </table>
+                </div>
+                <div class="key-point mt-3 text-sm">💡 Remember the cycle: Plan → Develop → Monitor → Recognize → Repeat</div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 1.2 — Quartile Management System
+              </summary>
+              <div class="pl-6 mt-2">
+                <p class="text-sm text-[var(--muted-foreground)] mb-3">Split your team into 4 performance groups. Each quartile gets a different management approach:</p>
+                <div class="overflow-x-auto">
+                  <table class="text-sm min-w-full">
+                    <tr><th>Quartile</th><th>Who</th><th>Your Action Plan</th></tr>
+                    <tr>
+                      <td class="whitespace-nowrap"><span class="badge" style="background: #22c55e; color: white">Q1</span> Top</td>
+                      <td>Best performers</td>
+                      <td><strong>Focus on DEVELOPMENT</strong> — Assign support tasks, groom for leadership, give them challenges. Don't micromanage them.</td>
+                    </tr>
+                    <tr>
+                      <td class="whitespace-nowrap"><span class="badge" style="background: #3b82f6; color: white">Q2</span></td>
+                      <td>Above average</td>
+                      <td><strong>Motivate</strong> — Help with minor opportunities, use development as a prize/reward for good work.</td>
+                    </tr>
+                    <tr>
+                      <td class="whitespace-nowrap"><span class="badge" style="background: #f59e0b; color: white">Q3</span></td>
+                      <td>Below average</td>
+                      <td><strong>Work closely</strong> — Assign a peer buddy, focus on RCA to find what's holding them back.</td>
+                    </tr>
+                    <tr>
+                      <td class="whitespace-nowrap"><span class="badge" style="background: #ef4444; color: white">Q4</span> Bottom</td>
+                      <td>Struggling</td>
+                      <td><strong>RCA → Follow Up → Accountability → Repeat.</strong> Intensive support with clear expectations.</td>
+                    </tr>
+                  </table>
+                </div>
+                <div class="key-point mt-3 text-sm">⚡ The biggest performance gains come from moving Q3 and Q4 up. Q1 needs development paths, not pressure.</div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 1.3 — Effective One-on-One Meetings
+              </summary>
+              <div class="pl-6 mt-2">
+                <div class="text-sm space-y-2">
+                  <p>✅ Schedule <strong>weekly</strong> with each direct report — consistency is key</p>
+                  <p>✅ Plan in advance with a <strong>structured agenda</strong></p>
+                  <p>✅ Keep track of objectives and deliverables from previous sessions</p>
+                  <p>✅ <strong>Never cancel</strong> — if you can't make it, reschedule</p>
+                </div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 1.4 — SLA vs. Interval Compliance (IC)
+              </summary>
+              <div class="pl-6 mt-2">
+                <div class="overflow-x-auto">
+                  <table class="text-sm min-w-full">
+                    <tr><th>Aspect</th><th>SLA</th><th>Interval Compliance (IC)</th></tr>
+                    <tr><td><strong>What</strong></td><td>% of calls answered within a threshold (e.g. 80% in 20 sec)</td><td>% of 30-min intervals where staffing matches the forecast</td></tr>
+                    <tr><td><strong>Focus</strong></td><td>Customer experience &amp; speed</td><td>Operational control &amp; scheduling</td></tr>
+                    <tr><td><strong>Level</strong></td><td>Operations-wide (all queues)</td><td>Individual &amp; team level</td></tr>
+                    <tr><td><strong>If Missed</strong></td><td>Longer wait, higher abandon, lower CSAT</td><td>Peak-hour gaps, SLA drops even with good total staffing</td></tr>
+                  </table>
+                </div>
+                <div class="key-point mt-3 text-sm">💡 You can hit overall SLA but still fail IC — because gaps during peaks matter even if you overstaffed during valleys.</div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 1.5 — CapLift vs. AHOD
+              </summary>
+              <div class="pl-6 mt-2">
+                <div class="overflow-x-auto">
+                  <table class="text-sm min-w-full">
+                    <tr><th></th><th>CapLift</th><th>AHOD</th></tr>
+                    <tr><td><strong>Purpose</strong></td><td>Emergency measure for sudden spikes</td><td>Planned adjustment for sustained demand</td></tr>
+                    <tr><td><strong>Duration</strong></td><td>Short-term (hours to a day)</td><td>Longer-term (days/weeks/seasonal)</td></tr>
+                    <tr><td><strong>Trigger</strong></td><td>Unexpected: outages, promos, weather</td><td>Ongoing higher-than-forecast volume</td></tr>
+                    <tr><td><strong>Action</strong></td><td>Everyone jumps in to take calls (support, leaders)</td><td>Raise caps, add overtime/shifts, reallocate HC</td></tr>
+                    <tr><td><strong>Nature</strong></td><td>Reactive / crisis-driven</td><td>Proactive / structural</td></tr>
+                  </table>
+                </div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 1.6 — Shift Manager Responsibilities (R&amp;R)
+              </summary>
+              <div class="pl-6 mt-2">
+                <div class="text-sm space-y-3">
+                  <div class="example-box"><strong>1. IC Shape Reviewal:</strong> Review IC shape from RTM → Plan to consume overages or cover shortages for the day.</div>
+                  <div class="example-box"><strong>2. Attendance Review:</strong> Review attendance email from RTM → Collect feedback → Reply to BSL in real-time and on the email.</div>
+                  <div class="example-box"><strong>3. Shift Manager Handover:</strong> Share EOS email: IC status, attendance feedback, ABS, confirmation coaching/training fulfilled.</div>
+                  <div class="example-box"><strong>4. Realtime Actions:</strong> Update OT, handle coaching, share feedback, overages consumption plan.</div>
+                </div>
+              </div>
+            </details>
+
+            <details>
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 1.7 — Production Shortfall Penalties
+              </summary>
+              <div class="pl-6 mt-2">
+                <table class="text-sm">
+                  <tr><th>Delivery % of Total LOB</th><th>Penalty on Production Hours Invoiced</th></tr>
+                  <tr><td>92.50% – 94.99%</td><td class="font-bold" style="color: #f59e0b">2.5%</td></tr>
+                  <tr><td>90.00% – 92.49%</td><td class="font-bold" style="color: #f97316">5.0%</td></tr>
+                  <tr><td>85.00% – 89.99%</td><td class="font-bold" style="color: #ef4444">7.5%</td></tr>
+                  <tr><td>&lt; 84.99%</td><td class="font-bold" style="color: #dc2626">10.0%</td></tr>
+                </table>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- CHAPTER 2 -->
+        <div class="chapter-content" id="ch1">
+          <div class="bg-[var(--card)] rounded-xl border border-[var(--border)] p-4 sm:p-6 mb-4 shadow-sm">
+            <h2 class="text-xl font-bold mb-1">Chapter 2: Coaching Mastery</h2>
+            <p class="text-[var(--muted-foreground)] text-sm mb-4">How to coach effectively — the psychology, frameworks, and practical techniques.</p>
+
+            <details open class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 2.1 — Why We Coach (4 Reasons)
+              </summary>
+              <div class="pl-6 mt-2 text-sm space-y-2">
+                <p><strong>① Process Compliance</strong> — Ensure every agent follows the same workflow and process standards.</p>
+                <p><strong>② Build Loyalty &amp; Trust</strong> — Communicate, explore opportunities, highlight achievements. This is how you build a real connection.</p>
+                <p><strong>③ Growth &amp; Development</strong> — Discuss career paths, train them for their next step, develop new skills.</p>
+                <p><strong>④ Give Feedback</strong> — Make sure the agent understood and actually applied the instructions you've given.</p>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 2.2 — Pre-Coaching Preparation
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <p class="mb-2 text-[var(--muted-foreground)]">Every coaching session must be prepared. Never wing it.</p>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full">
+                    <tr><th style="width:30%">Step</th><th>Details</th></tr>
+                    <tr><td>⏱ <strong>Plan Ahead</strong></td><td>Pre-plan 30 minutes before session. Prep per agent should not exceed 15 minutes.</td></tr>
+                    <tr><td>📊 <strong>Summary</strong></td><td>Show the agent their rank from the DPR (Daily Performance Report) + the trend of their failed KPIs.</td></tr>
+                    <tr><td>📋 <strong>Hard Evidence</strong></td><td>Bring Monitoring results, Spot checks, Analysis data, Verbatim feedback — must be very descriptive, not vague.</td></tr>
+                    <tr><td>🔴🟢 <strong>Low/Highlights</strong></td><td>Extract specific good and bad points from the evidence. Keep them brief, in bullet format.</td></tr>
+                    <tr><td>🎯 <strong>Action Items</strong></td><td>Each lowlight gets an action item that is: <strong>Attainable, Governable, Quantifiable</strong></td></tr>
+                    <tr><td>📈 <strong>SMART Goal</strong></td><td>Quantify the improvement rate — it should match the impact of the opportunity.</td></tr>
+                  </table>
+                </div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 2.3 — Psychology: The Endowment Effect
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box">
+                  <strong>Definition:</strong> People value things they own more highly than things they don't own.
+                </div>
+                <p class="my-3"><strong>How to use it in coaching:</strong> Give the employee a <em>sense of ownership</em> over the action item. If they feel like it was <em>their</em> decision (not your instruction), compliance dramatically increases. This solves "The Will" in GROW.</p>
+                <div class="example-box">
+                  <strong>Practical Techniques:</strong>
+                  <ul class="mt-1 space-y-1 list-disc pl-4">
+                    <li>Have the agent identify their own lowlights from the evidence</li>
+                    <li>Role-play: make them be the customer while you replay their lowlight</li>
+                    <li>Have them listen to their calls and self-rate on the monitoring form</li>
+                  </ul>
+                </div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 2.4 — Coaching Tips &amp; Tricks
+              </summary>
+              <div class="pl-6 mt-2 text-sm space-y-3">
+                <div class="example-box"><strong>🔍 Find Their Hidden Motive:</strong> Every employee works for money <em>plus</em> a hidden motive (career growth, social connections, saving). Find it to drive compliance.</div>
+                <div class="example-box"><strong>🕳️ Make Loopholes:</strong> Don't school or instruct directly. Create loopholes in their arguments so they discover the issue themselves.</div>
+                <div class="example-box"><strong>🧠 Never say NO:</strong> Never directly object to their statements. Highlight the gap and let them figure out why it won't work.</div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 2.5 — The GROW Model ⭐
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="overflow-x-auto">
+                  <table class="min-w-full">
+                    <tr><th style="width:8%">Letter</th><th style="width:20%">Stage</th><th style="width:30%">Purpose</th><th>Key Elements</th></tr>
+                    <tr>
+                      <td class="text-center text-lg font-bold" style="color: #22c55e">G</td>
+                      <td><strong>GOAL</strong></td>
+                      <td>What to achieve?</td>
+                      <td>Direct, Clear, SMART, Tangible</td>
+                    </tr>
+                    <tr>
+                      <td class="text-center text-lg font-bold" style="color: #3b82f6">R</td>
+                      <td><strong>REALITY</strong></td>
+                      <td>Where is the agent now?</td>
+                      <td>Current score, actions, opportunities, challenges</td>
+                    </tr>
+                    <tr>
+                      <td class="text-center text-lg font-bold" style="color: #f59e0b">O</td>
+                      <td><strong>OPTIONS</strong></td>
+                      <td>What could be done?</td>
+                      <td>Action Items, Alternatives, Pros/Cons</td>
+                    </tr>
+                    <tr>
+                      <td class="text-center text-lg font-bold" style="color: #ef4444">W</td>
+                      <td><strong>WILL</strong></td>
+                      <td>What WILL they commit to?</td>
+                      <td>Commitment, Follow-up, Verbal Agreement</td>
+                    </tr>
+                  </table>
+                </div>
+                <div class="key-point mt-3">💡 "The Will" is the hardest part. Use the Endowment Effect to solve it.</div>
+              </div>
+            </details>
+
+            <details>
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 2.6 — The STAR Model
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <p class="mb-3 text-[var(--muted-foreground)]">Used for structuring responses in interviews and assessment scenarios:</p>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full">
+                    <tr><th style="width:10%">Letter</th><th>Stage</th><th>What to Do</th></tr>
+                    <tr><td class="text-center font-bold text-lg">S</td><td><strong>Situation</strong></td><td>Set the scene — state the problem in detail</td></tr>
+                    <tr><td class="text-center font-bold text-lg">T</td><td><strong>Task</strong></td><td>What needed to be done — goals and desired outcome</td></tr>
+                    <tr><td class="text-center font-bold text-lg">A</td><td><strong>Action</strong></td><td>What you actually did and <strong>why</strong></td></tr>
+                    <tr><td class="text-center font-bold text-lg">R</td><td><strong>Result</strong></td><td>The outcome — focus on positives and metrics</td></tr>
+                  </table>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- CHAPTER 3 -->
+        <div class="chapter-content" id="ch2">
+          <div class="bg-[var(--card)] rounded-xl border border-[var(--border)] p-4 sm:p-6 mb-4 shadow-sm">
+            <h2 class="text-xl font-bold mb-1">Chapter 3: RCA &amp; Problem Solving</h2>
+            <p class="text-[var(--muted-foreground)] text-sm mb-4">Root Cause Analysis — the difference between fixing symptoms and fixing problems.</p>
+
+            <details open class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 3.1 — Root Cause ≠ Symptom
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="overflow-x-auto">
+                  <table class="min-w-full">
+                    <tr><th></th><th>Symptom</th><th>Root Cause</th></tr>
+                    <tr><td><strong>What</strong></td><td>Visible indicator</td><td>The hidden issue behind it</td></tr>
+                    <tr><td><strong>Nature</strong></td><td>A consequence. Triggered by multiple causes.</td><td>The reason the problem exists.</td></tr>
+                    <tr><td><strong>Fixing it</strong></td><td>Short-term relief — keeps coming back</td><td>Long-term fix — problem doesn't repeat</td></tr>
+                  </table>
+                </div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 3.2 — The 5 Whys
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box mb-3">
+                  <strong>Best for:</strong> Simple or recurring issues, behavioral problems<br>
+                  <strong>How:</strong> Ask "Why?" 5 times. Each answer feeds the next.
+                </div>
+                <div class="key-point">⚠️ Common Pitfall: Accepting vague answers ("lack of ownership") or stopping early.</div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 3.3 — Fishbone Diagram (Ishikawa)
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box mb-3">
+                  <strong>Best for:</strong> Multi-factor issues, cross-functional problems<br>
+                  <strong>Bones (Categories):</strong> People, Process, Tools, Skill, Behaviors, Knowledge
+                </div>
+                <div class="key-point">⚠️ Common Pitfall: Overloading one category, failing to validate with data.</div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 3.4 — Pareto Analysis (80/20 Rule)
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box mb-3">
+                  <strong>Principle:</strong> 80% of effects come from 20% of causes<br>
+                  <strong>Best for:</strong> Prioritizing where to focus efforts
+                </div>
+                <div class="key-point">⚠️ Common Pitfall: Focusing only on frequency and ignoring impact severity.</div>
+              </div>
+            </details>
+
+            <details>
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 3.5 — Deep Dive Analysis
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box mb-3">
+                  <strong>Drill-Down Path:</strong> MoM (Month over Month) → WoW (Week over Week) → DoD (Day over Day) → Call Driver Breakdown → Verbatim Insights
+                </div>
+                <div class="key-point">⚠️ Common Pitfall: Drowning in data without synthesizing, or cherry-picking data to fit a narrative.</div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- CHAPTER 4 -->
+        <div class="chapter-content" id="ch3">
+          <div class="bg-[var(--card)] rounded-xl border border-[var(--border)] p-4 sm:p-6 mb-4 shadow-sm">
+            <h2 class="text-xl font-bold mb-1">Chapter 4: Operational KPIs — Formulas</h2>
+            <p class="text-[var(--muted-foreground)] text-sm mb-4">Every formula you need to know, with worked examples.</p>
+
+            <details open class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 4.1 — Utilization &amp; Occupancy
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box mb-2">
+                  <strong>Utilization %</strong> = (Productive + Available) ÷ Paid Hours Onsite × 100<br>
+                  <strong>Occupancy %</strong> = Productive ÷ (Productive + Available) × 100
+                </div>
+                <div class="example-box">
+                  <strong>Example:</strong> Productive = 377 min, Available = 58 min, Paid = 480 min<br>
+                  Util = (377+58)÷480 = <strong>90.6%</strong> | Occ = 377÷(377+58) = <strong>86.7%</strong>
+                </div>
+                <div class="key-point mt-2">⚠️ COPC Utilization Benchmark = 86%. High Occupancy (95%+) causes burnout.</div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 4.2 — Shrinkage, Absenteeism, Attrition
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box">
+                  <strong>Absenteeism %</strong> = Missing Hours ÷ Scheduled Hours × 100<br>
+                  <strong>Attrition %</strong> = Heads to Replace ÷ Total Headcount × 100<br>
+                  <strong>Shrinkage %</strong> = Total Lost Hours ÷ Scheduled Hours × 100
+                </div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 4.3 — AHT &amp; SLA
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box">
+                  <strong>AHT</strong> = (Total Talk Time + Hold Time + ACW) ÷ Total Calls<br>
+                  <strong>SLA %</strong> = Calls Answered Within Threshold ÷ Total Received Calls × 100
+                </div>
+              </div>
+            </details>
+
+            <details>
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 4.4 — VOC: C-SAT, D-SAT, NPS
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box">
+                  <strong>C-SAT %</strong> = Positive Surveys ÷ Total Surveys × 100<br>
+                  <strong>D-SAT %</strong> = Negative Surveys ÷ Total Surveys × 100<br>
+                  <strong>NPS %</strong> = (Promoters % − Detractors %)
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- CHAPTER 5 -->
+        <div class="chapter-content" id="ch4">
+          <div class="bg-[var(--card)] rounded-xl border border-[var(--border)] p-4 sm:p-6 mb-4 shadow-sm">
+            <h2 class="text-xl font-bold mb-1">Chapter 5: Financial Management</h2>
+            <p class="text-[var(--muted-foreground)] text-sm mb-4">Cost drivers, staffing math, P&amp;L, billing models.</p>
+
+            <details open class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 5.1 — The Shrinkage Waterfall ⭐
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <p class="mb-3 text-[var(--muted-foreground)]">How to calculate exactly how many people you need to staff:</p>
+                <div class="formula-box mt-3 overflow-x-auto whitespace-nowrap">
+                  <strong>Master Formula:</strong><br>
+                  People Needed = Annualized Hours ÷ (A × B × C × D × E)<br><br>
+                  A = Paid hrs/day (8)<br>
+                  B = Business days/yr (260) or weeks/yr × days/wk (52×5)<br>
+                  C = Attendance Rate (100% - Not-in-office shrink)<br>
+                  D = Production Util. (100% - In-office shrink)<br>
+                  E = Occupancy Rate
+                </div>
+              </div>
+            </details>
+
+            <details class="mb-4">
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 5.2 — Billing Models &amp; MLOTT
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="overflow-x-auto">
+                  <table class="min-w-full">
+                    <tr><th>Model</th><th>Key Management Focus</th></tr>
+                    <tr><td><strong>Per FTE / Headcount</strong></td><td>Maintain max staffing; flat revenue</td></tr>
+                    <tr><td><strong>Per Worked Hour</strong></td><td>Manage Not-At-Work shrinkage</td></tr>
+                    <tr><td><strong>Per Production Hour</strong></td><td>Manage At-Work shrinkage / AUX abuse</td></tr>
+                    <tr><td><strong>Per Productive Hour</strong></td><td>Occupancy + AHT. ⚠️ Lowering AHT cuts revenue!</td></tr>
+                    <tr><td><strong>Per Transaction</strong></td><td>Maximize volume, lower abandons</td></tr>
+                  </table>
+                </div>
+                <div class="example-box mt-3">
+                  <strong>MLOTT (Money Left On The Table)</strong> = Quantifying missed revenue.<br>
+                  Example: 100 agents × 5% excess absence × 8 hrs × $22/hr = $880/day lost.
+                </div>
+              </div>
+            </details>
+
+            <details>
+              <summary class="flex items-center gap-2 font-semibold text-base py-2">
+                <span class="arrow transition-transform">▶</span> 5.3 — P&amp;L Structure &amp; Triple Constraints
+              </summary>
+              <div class="pl-6 mt-2 text-sm">
+                <div class="formula-box mb-2">
+                  <strong>Gross Margin</strong> = Revenue − Direct Costs (COGS)<br>
+                  <strong>Operating Income (OI)</strong> = Gross Margin − OPEX (G&amp;A)<br>
+                  <strong>Triple Constraints:</strong> Cost ↔ Revenue ↔ KPIs
+                </div>
+                <p>Changing one constraint ALWAYS affects the others. Cutting AHT saves cost but drops CSAT (KPI), which causes penalties (Revenue).</p>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- CHAPTER 6 -->
+        <div class="chapter-content" id="ch5">
+          <div class="bg-[var(--card)] rounded-xl border border-[var(--border)] p-4 sm:p-6 mb-4 shadow-sm">
+            <h2 class="text-xl font-bold mb-1">Chapter 6: Quick Reference</h2>
+            <p class="text-[var(--muted-foreground)] text-sm mb-4">The top 10 things to memorize.</p>
+
+            <div class="pl-2 sm:pl-6 mt-2 text-sm">
+              <div class="space-y-3">
+                <div class="example-box"><strong>1.</strong> <strong>GROW</strong> = Goal, Reality, Options, Will</div>
+                <div class="example-box"><strong>2.</strong> <strong>STAR</strong> = Situation, Task, Action, Result</div>
+                <div class="example-box"><strong>3.</strong> <strong>Endowment Effect</strong> = Create ownership in coaching → compliance increases</div>
+                <div class="example-box"><strong>4.</strong> <strong>Triple Constraints</strong> = Cost ↔ Revenue ↔ KPIs — they're always linked</div>
+                <div class="example-box"><strong>5.</strong> <strong>5 Billing Models</strong> = Per FTE, Worked Hr, Production Hr, Productive Hr, Transaction</div>
+                <div class="example-box"><strong>6.</strong> <strong>Shrinkage Chain</strong> = Not-In-Office → In-Office → Availability → Occupancy</div>
+                <div class="example-box"><strong>7.</strong> <strong>P&amp;L Chain</strong> = Revenue → Gross Margin → OI → NGOI → Net Earnings</div>
+                <div class="example-box"><strong>8.</strong> <strong>MLOTT</strong> = Quantify the revenue you're leaving on the table</div>
+                <div class="example-box"><strong>9.</strong> <strong>Attrition Cost</strong> ≈ $4,500 per Game Changer replacement</div>
+                <div class="example-box"><strong>10.</strong> <strong>COPC Util Benchmark</strong> = 86%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 2: QUIZ CENTER ==================== -->
+    <div id="view-quiz" class="flex-1 w-full pt-4 hidden">
+      <div id="app" class="px-2 sm:px-4"></div>
+    </div>
+
+  </div> <!-- End Main Container -->
+
+  <!-- JavaScript Logic -->
+  <script>
+    // --- TOP LEVEL TAB SWITCHING ---
+    function switchMainTab(tab) {
+      if (tab === 'playbook') {
+        document.getElementById('view-playbook').classList.remove('hidden');
+        document.getElementById('view-quiz').classList.add('hidden');
+        
+        document.getElementById('tab-playbook').classList.add('active', 'border-[var(--primary)]', 'text-[var(--primary)]');
+        document.getElementById('tab-playbook').classList.remove('border-transparent', 'text-[var(--muted-foreground)]');
+        
+        document.getElementById('tab-quiz').classList.remove('active', 'border-[var(--primary)]', 'text-[var(--primary)]');
+        document.getElementById('tab-quiz').classList.add('border-transparent', 'text-[var(--muted-foreground)]');
+      } else {
+        document.getElementById('view-quiz').classList.remove('hidden');
+        document.getElementById('view-playbook').classList.add('hidden');
+        
+        document.getElementById('tab-quiz').classList.add('active', 'border-[var(--primary)]', 'text-[var(--primary)]');
+        document.getElementById('tab-quiz').classList.remove('border-transparent', 'text-[var(--muted-foreground)]');
+        
+        document.getElementById('tab-playbook').classList.remove('active', 'border-[var(--primary)]', 'text-[var(--primary)]');
+        document.getElementById('tab-playbook').classList.add('border-transparent', 'text-[var(--muted-foreground)]');
+        
+        // Re-render home if we are at root state
+        if (currentPhase === null) render();
+      }
+    }
+
+    // --- PLAYBOOK CHAPTER SWITCHING ---
+    function showChapter(idx) {
+      document.querySelectorAll('.chapter-content').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+      });
+      document.querySelectorAll('.chapter-btn').forEach((btn, i) => {
+        if (i === idx) {
+          btn.classList.add('active');
+          btn.style.background = 'var(--primary)';
+          btn.style.color = 'var(--primary-foreground)';
+        } else {
+          btn.classList.remove('active');
+          btn.style.background = 'var(--card)';
+          btn.style.color = 'var(--foreground)';
+        }
+      });
+      // Scroll to top of playbook content
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- QUIZ APP LOGIC ---
+    const PHASES = [
+      { name: "Phase 1: Foundation", desc: "Core concepts & definitions across all topics" },
+      { name: "Phase 2: Deep Dive", desc: "Detailed knowledge & relationships between concepts" },
+      { name: "Phase 3: Scenarios & Math", desc: "Calculations, scenarios, and applied problem solving" },
+      { name: "Phase 4: Mastery", desc: "Advanced scenarios, edge cases, and strategic thinking" }
+    ];
+
+    const TAGS = {
+      pm: { label: "Performance Mgmt", color: "#3b82f6" },
+      coach: { label: "Coaching", color: "#8b5cf6" },
+      rca: { label: "RCA", color: "#f59e0b" },
+      kpi: { label: "KPIs", color: "#22c55e" },
+      fin: { label: "Financial", color: "#ef4444" }
+    };
+
+    const ALL_QUESTIONS = [
+      // PHASE 1
+      { p:0, tag:"pm", q:"What are the 4 key components of Performance Management in order?", opts:["Plan, Monitor, Review, Reward","Planning, Developing & Reviewing, Monitoring, Recognition & Rewards","Hiring, Training, Coaching, Termination","Forecasting, Scheduling, Monitoring, Reporting"], ans:1, exp:"The 4 components are: (1) Performance Planning, (2) Developing & Reviewing, (3) Monitoring, (4) Recognition & Rewards." },
+      { p:0, tag:"pm", q:"In the Quartile system, what is the recommended action for Q1 (Top Performers)?", opts:["RCA and follow-up","Work closely on performance and assign a peer","Focus on DEVELOPMENT and assign support tasks","Motivate and help with minor opportunities"], ans:2, exp:"Q1 agents are your best — focus on developing them, assigning support tasks, and grooming them for leadership. Don't micromanage." },
+      { p:0, tag:"pm", q:"What is the main difference between SLA and Interval Compliance (IC)?", opts:["SLA is per agent, IC is per team","SLA measures call quality, IC measures call quantity","SLA measures % calls answered in threshold, IC measures % intervals where staffing matches forecast","SLA is daily, IC is monthly"], ans:2, exp:"SLA = % calls answered within a time threshold (e.g., 80% in 20s). IC = % of 30-min intervals where staffing aligns with the forecasted requirement." },
+      { p:0, tag:"pm", q:"What is CapLift?", opts:["A planned adjustment for sustained high demand","An emergency measure where everyone jumps in to take calls during sudden spikes","A penalty tier for production shortfalls","A billing model for overtime hours"], ans:1, exp:"CapLift is reactive and crisis-driven — everyone including support staff and leaders jumps in to handle calls during unexpected spikes (outages, promos, weather)." },
+      { p:0, tag:"pm", q:"If delivery is at 88% of total LOB, what penalty is applied?", opts:["2.5%","5.0%","7.5%","10.0%"], ans:2, exp:"85.00% – 89.99% = 7.5% penalty on production hours invoiced." },
+      { p:0, tag:"coach", q:"What does GROW stand for in the coaching model?", opts:["Guide, Review, Observe, Win","Goal, Reality, Options, Will","Growth, Results, Objectives, Work","Goals, Resources, Outcomes, Workflow"], ans:1, exp:"GROW = Goal (what to achieve), Reality (where are you now), Options (what could you do), Will (what WILL you commit to)." },
+      { p:0, tag:"coach", q:"What is the Endowment Effect in coaching?", opts:["Rewarding agents with bonuses for good performance","People value things they own more — creating ownership drives compliance","A penalty system for underperformers","A scheduling technique for optimal coverage"], ans:1, exp:"The Endowment Effect means people value what they 'own' more highly. In coaching, give agents a sense of ownership over action items so they feel it's THEIR decision." },
+      { p:0, tag:"coach", q:"What does STAR stand for?", opts:["Strategy, Timeline, Actions, Results","Situation, Task, Action, Result","Skills, Training, Assessment, Review","Standards, Targets, Alignment, Recognition"], ans:1, exp:"STAR = Situation (set the scene), Task (what needed doing), Action (what you did and why), Result (the outcome — focus on positives)." },
+      { p:0, tag:"coach", q:"How long should pre-coaching preparation take per agent?", opts:["5 minutes","10 minutes","No more than 15 minutes","30 minutes"], ans:2, exp:"Pre-plan 30 minutes before starting sessions. Preparing for EACH agent should not exceed 15 minutes." },
+      { p:0, tag:"coach", q:"What is the KEY principle during a coaching session according to the Tips & Tricks?", opts:["Always say NO clearly so the agent understands","Make the agent reach their own conclusion — never say NO directly","Give direct instructions and follow up strictly","Only discuss numbers and metrics"], ans:1, exp:"Never say NO or directly object. Instead, highlight loopholes in their argument and let them figure it out on their own." },
+      { p:0, tag:"rca", q:"What is the difference between a symptom and a root cause?", opts:["Symptoms are hidden, root causes are visible","Symptoms are visible indicators; root causes are the hidden reasons behind them","They are the same thing viewed from different angles","Symptoms are long-term, root causes are short-term"], ans:1, exp:"Symptom = what you SEE (visible indicator). Root Cause = WHY it exists (hidden). Fixing symptoms = short-term relief. Fixing root causes = long-term fix." },
+      { p:0, tag:"rca", q:"The 5 Whys technique is best suited for:", opts:["Complex multi-dimensional issues across many teams","Simple or recurring issues with 1-2 major contributors","Only financial problems","Only quality-related issues"], ans:1, exp:"5 Whys is a rapid root cause tool ideal for behavioral, process, or small-scale issues. Often used at team level." },
+      { p:0, tag:"rca", q:"What are the standard categories (bones) in a Fishbone Diagram?", opts:["Cost, Revenue, KPIs, SLA, Attrition, Training","People, Process, Tools, Skill, Behaviors, Knowledge","Who, What, When, Where, Why, How","Input, Output, Feedback, Control, Resource, Constraint"], ans:1, exp:"The Fishbone branches into: People, Process, Tools, Skill, Behaviors & Knowledge." },
+      { p:0, tag:"rca", q:"Pareto Analysis is based on what principle?", opts:["50/50 — equal contribution from all causes","80/20 — 80% of effects come from 20% of causes","90/10 — 90% of problems come from 10% of agents","70/30 — 70% of revenue comes from 30% of clients"], ans:1, exp:"The Pareto Principle (80/20 rule): 80% of effects come from 20% of causes. Focus efforts on the vital few." },
+      { p:0, tag:"rca", q:"What is the correct drill-down path for a Deep Dive analysis?", opts:["DoD > WoW > MoM > Verbatim","MoM > WoW > DoD > Call Driver Breakdown > Verbatim Insights","Verbatim > Call Drivers > WoW > MoM","Agent level > Team level > Site level > Global"], ans:1, exp:"Deep Dive path: Month-over-Month → Week-over-Week → Day-over-Day → Call Driver Breakdown → Verbatim Insights." },
+      { p:0, tag:"kpi", q:"What is the formula for Utilization?", opts:["Productive Time ÷ Paid Hours","(Productive + Available Time) ÷ Paid Hours Onsite","Productive Time ÷ (Productive + Available)","Scheduled Hours ÷ Total Hours"], ans:1, exp:"Utilization % = (Productive Time + Available Time) ÷ Paid Hours Onsite. It measures how much of paid time is spent either working or ready to work." },
+      { p:0, tag:"kpi", q:"What is the formula for Occupancy?", opts:["(Productive + Available) ÷ Paid Hours","Productive Time ÷ (Productive + Available Time)","Missing Hours ÷ Scheduled Hours","Calls Answered ÷ Total Calls"], ans:1, exp:"Occupancy % = Productive Time ÷ (Productive + Available Time). It measures how much of ready-to-work time is spent actually working." },
+      { p:0, tag:"kpi", q:"What is the formula for AHT?", opts:["Total Calls ÷ Total Time","(Talk Time + Hold Time + ACW) ÷ Total Number of Calls","Talk Time ÷ Total Calls","(Talk Time + Hold Time) ÷ Available Time"], ans:1, exp:"AHT = (Total Talk Time + Hold Time + After Call Work) ÷ Total Number of Calls." },
+      { p:0, tag:"kpi", q:"What is the formula for NPS?", opts:["Positive Surveys ÷ Total Surveys","Negative Surveys ÷ Total Surveys","(Promoters - Detractors) ÷ Total Surveys","Promoters ÷ Detractors"], ans:2, exp:"NPS % = (Promoters − Detractors) ÷ Total Number of Surveys × 100." },
+      { p:0, tag:"kpi", q:"What is the COPC benchmark for Utilization?", opts:["80%","86%","90%","95%"], ans:1, exp:"COPC Utilization Benchmark = 86%. AUX time should not exceed 14%." },
+      { p:0, tag:"fin", q:"What does COGS stand for and what does it include?", opts:["Cost of General Services — IT and facilities","Cost of Goods Sold — direct costs like agents, TLs, QA, trainers","Cost of Government Standards — compliance costs","Cost of Global Staffing — recruitment costs"], ans:1, exp:"COGS = Cost of Goods Sold (Direct Expense). Includes: Game Changers, TLs, OMs, SMEs, DPE, QA, Trainers — anyone directly driving revenue." },
+      { p:0, tag:"fin", q:"What is the P&L chain from Revenue to Net Earnings?", opts:["Revenue → OI → GM → NGOI → Net Earnings","Revenue → GM → OI → NGOI → Net Earnings","Revenue → NGOI → GM → OI → Net Earnings","Revenue → Net Earnings → GM → OI → NGOI"], ans:1, exp:"Revenue − Direct Costs = Gross Margin. GM − OPEX = Operating Income. OI − Amortization = NGOI. NGOI − Interest/Tax = Net Earnings." },
+      { p:0, tag:"fin", q:"What does MLOTT stand for?", opts:["Maximum Limit on Total Transactions","Money Left on the Table","Monthly Loss on Targeted Throughput","Management Level of Tolerance Threshold"], ans:1, exp:"MLOTT = Money Left on the Table — revenue you SHOULD have earned but didn't." },
+      { p:0, tag:"fin", q:"How much does it approximately cost to replace one Game Changer?", opts:["$1,500","$2,500","$4,500","$8,000"], ans:2, exp:"The benchmark attrition replacement cost is approximately $4,500 per Game Changer." },
+      { p:0, tag:"fin", q:"In a Per FTE billing model, what happens to revenue when agents are absent?", opts:["Revenue drops proportionally","Revenue stays the same — it's flat billing regardless of attendance","Revenue increases due to overtime","Revenue is calculated per call"], ans:1, exp:"Per FTE/Headcount is flat billing. The same amount is billed regardless of attendance." },
+
+      // PHASE 2
+      { p:1, tag:"pm", q:"For Q3 agents (below average), what is the recommended action?", opts:["Focus on development and assign support tasks","RCA, follow up, accountability, and repeat","Work closely on performance, assign a peer, focus on RCA","Motivate and develop as a prize"], ans:2, exp:"Q3: Work closely on performance — assign a peer buddy — focus on RCA to find what's holding them back." },
+      { p:1, tag:"pm", q:"What is AHOD and how does it differ from CapLift?", opts:["AHOD is reactive; CapLift is proactive","AHOD is a planned, proactive adjustment for sustained demand; CapLift is a reactive emergency measure","They are the same thing","AHOD is for quality issues; CapLift is for volume issues"], ans:1, exp:"AHOD = proactive, structural (raise caps, add shifts). CapLift = reactive, crisis-driven (everyone jumps in)." },
+      { p:1, tag:"pm", q:"What are the 4 responsibilities of a Shift Manager?", opts:["Hiring, Training, Coaching, Termination","IC Shape Review, Attendance Review, Handover, Realtime Actions","Forecasting, Scheduling, Monitoring, Reporting","Quality Audit, Coaching, Training, Performance Review"], ans:1, exp:"Shift Manager R&R: (1) IC Shape Reviewal, (2) Attendance Review, (3) Shift Manager Handover (EOS email), (4) Realtime Actions." },
+      { p:1, tag:"pm", q:"Per Interval IC formula is:", opts:["Total calls ÷ Total intervals","Achieved intervals ÷ Total day intervals","Production ÷ Commitment","Agents logged in ÷ Agents scheduled"], ans:2, exp:"Per Interval IC % = Production ÷ Commitment (per interval)." },
+      { p:1, tag:"pm", q:"You can hit overall SLA but still fail IC. Why?", opts:["Because IC measures quality not speed","Because you could be overstaffed in valleys but understaffed during peak intervals","Because IC is measured annually","Because SLA and IC are completely unrelated"], ans:1, exp:"IC catches interval-level staffing gaps. Overstaffing during low-volume masks SLA, but IC fails during peak 30-min intervals." },
+      { p:1, tag:"coach", q:"In the GROW model, what does 'Reality' focus on?", opts:["Setting targets and KPIs","The agent's current score, current actions, opportunities, and challenges","Listing all possible action items","Getting a verbal commitment"], ans:1, exp:"Reality (R) = Where is the agent NOW? Current Score, Current Actions, Opportunities, Challenges." },
+      { p:1, tag:"coach", q:"What is the hardest part of GROW to achieve, and how do you solve it?", opts:["Goal — solved by setting SMART targets","Reality — solved by showing hard evidence","Options — solved by brainstorming alternatives","Will — solved by using the Endowment Effect to create ownership"], ans:3, exp:"'The Will' is hardest. Use the Endowment Effect: give them ownership so they feel it's THEIR decision." },
+      { p:1, tag:"coach", q:"What should a coaching session's Hard Evidence consist of?", opts:["Only the DPR numbers","Monitoring, Spot check, Analysis, Verbatim outcomes — very descriptive","Just the agent's attendance record","A summary of team performance"], ans:1, exp:"Hard Evidence = Monitoring results + Spot checks + Analysis data + Verbatim feedback." },
+      { p:1, tag:"coach", q:"Why should you 'never say NO' during coaching?", opts:["It's against company policy","People don't like admitting mistakes, but they can see them when guided through loopholes in their own argument","Saying NO motivates agents to prove you wrong","It doesn't matter what you say, only the data matters"], ans:1, exp:"People resist admitting mistakes when told directly. Highlight loopholes and let them reach the conclusion themselves." },
+      { p:1, tag:"coach", q:"How do you practically apply the Endowment Effect? Select the WRONG technique:", opts:["Have the agent identify their own lowlights from evidence","Tell the agent exactly what they did wrong and what to fix","Role-play: make them be the customer","Have them listen to calls and self-rate on the monitoring form"], ans:1, exp:"Telling the agent directly what to fix is NOT the Endowment Effect. Guide them to discover it themselves." },
+      { p:1, tag:"rca", q:"In the 5 Whys example about TSR repeats, what was the root cause?", opts:["Agents didn't follow the correct flow","Customers called back for the same issue","The knowledge issue was not included in the training material","Agents chose the wrong symptom"], ans:2, exp:"The chain: Repeats → same issue → wrong flow → wrong symptom → knowledge issue → NOT INCLUDED IN TRAINING MATERIAL." },
+      { p:1, tag:"rca", q:"What is the common pitfall of the 5 Whys?", opts:["It takes too long","Accepting vague answers like 'lack of ownership' or stopping before reaching the true root cause","It requires too much data","It only works for financial problems"], ans:1, exp:"Common pitfall: accepting vague answers or stopping before the actual root cause." },
+      { p:1, tag:"rca", q:"When should you use a Deep Dive instead of simpler tools?", opts:["Always — it's the best tool","When the issue involves multiple drivers across people, tools, and processes and simpler tools give inconclusive results","Only for financial analysis","Only when the client requests it"], ans:1, exp:"Deep Dive is for complex, multi-dimensional issues where simpler tools point to broad causes." },
+      { p:1, tag:"rca", q:"What is the common pitfall of Pareto Analysis?", opts:["It requires exactly 5 categories","Focusing only on frequency and ignoring impact severity","It can only be used for call volume issues","It takes too long to complete"], ans:1, exp:"Common pitfall: focusing only on frequency. A rare event with massive impact matters more." },
+      { p:1, tag:"rca", q:"Addressing a symptom gives you:", opts:["A long-term permanent fix","Short-term relief — the problem keeps coming back","No effect at all","Better results than addressing root causes"], ans:1, exp:"Addressing symptoms = short-term relief. Only addressing the ROOT CAUSE gives a long-term fix." },
+      { p:1, tag:"kpi", q:"Productive time = 377 min, Available = 58 min, Paid hours = 480 min. What is Utilization?", opts:["78.54%","86.67%","90.63%","95.21%"], ans:2, exp:"Utilization = (377 + 58) ÷ 480 = 435 ÷ 480 = 90.63%." },
+      { p:1, tag:"kpi", q:"Using the same data (Productive=377, Available=58), what is Occupancy?", opts:["78.54%","86.67%","90.63%","95.21%"], ans:1, exp:"Occupancy = 377 ÷ (377 + 58) = 377 ÷ 435 = 86.67%." },
+      { p:1, tag:"kpi", q:"Shrinkage components: Sys=300, Abs=900, Train=400, 1on1=500, Coach=450, Attr=1980, Scheduled=19800. What is Shrinkage?", opts:["15.30%","19.55%","22.88%","25.10%"], ans:2, exp:"Total lost = 4,530. Shrinkage = 4,530 ÷ 19,800 = 22.88%." },
+      { p:1, tag:"kpi", q:"TTT=3729s, Hold=76s, ACW=18s, Calls=10. What is AHT?", opts:["372.9 sec","380.5 sec","382.3 sec","382 sec"], ans:2, exp:"AHT = (3729 + 76 + 18) ÷ 10 = 3,823 ÷ 10 = 382.3 seconds (≈382 sec)." },
+      { p:1, tag:"kpi", q:"6 positive surveys, 4 negative, 10 total. What is NPS?", opts:["60%","40%","20%","10%"], ans:2, exp:"NPS = (Promoters − Detractors) ÷ Total = (6 − 4) ÷ 10 = 20%." },
+      { p:1, tag:"fin", q:"What are the 3 variables that determine People (Direct Labor) cost?", opts:["Salary, Benefits, Taxes","Profile, Experience, Tenure","Headcount, Hours, Rate","Training, Attrition, Overtime"], ans:1, exp:"The 3 cost variables: (1) Profile, (2) Experience level, (3) Tenure." },
+      { p:1, tag:"fin", q:"In a Per Transaction billing model, what is the key management focus?", opts:["Maintaining maximum staffing levels","Managing attendance and shrinkage only","Volume — reduce abandons, manage AHT, maximize calls handled","Ensuring all agents are in AUX for training"], ans:2, exp:"Per Transaction: Revenue = Calls × Rate. Maximize calls handled, reduce abandon rate." },
+      { p:1, tag:"fin", q:"What is the danger of reducing AHT in a Per Productive Hour billing model?", opts:["It has no effect on revenue","Reducing AHT could actually REDUCE revenue since fewer productive minutes are billed","It always increases revenue","It only affects quality, not finances"], ans:1, exp:"In Per Productive Hour billing, you're paid for handle time. Reducing AHT reduces billable minutes." },
+      { p:1, tag:"fin", q:"What is the formula for Gross Margin %?", opts:["Revenue ÷ Direct Cost × 100","(Revenue − Direct Cost) ÷ Revenue × 100","Direct Cost ÷ Revenue × 100","(Revenue − OPEX) ÷ Revenue × 100"], ans:1, exp:"GM% = (Revenue − Direct Cost) ÷ Revenue × 100." },
+      { p:1, tag:"fin", q:"What are 'Inactive People' in cost drivers?", opts:["Agents who are logged in but not taking calls","People on payroll but not needed/not performing work — trainees, realigned staff, extended leaves","Agents on break","Terminated employees still in the system"], ans:1, exp:"Inactive People = people you're paying who are NOT doing productive work: new hire trainees, extended paid leaves." },
+
+      // PHASE 3
+      { p:2, tag:"kpi", q:"800 calls × €6/call revenue. Agents: 130h × €15. Sups: 20h × €18. What is Gross Margin?", opts:["€1,950","€2,310","€2,490","€4,800"], ans:2, exp:"Revenue = 800×6 = €4,800. Cost = (130×15)+(20×18) = 1,950+360 = €2,310. GM = 4,800−2,310 = €2,490." },
+      { p:2, tag:"kpi", q:"Same scenario: Revenue €4,800, GM €2,490. What is the GM%?", opts:["48.1%","51.9%","52.0%","55.3%"], ans:2, exp:"GM% = 2,490 ÷ 4,800 = 0.51875 = 51.9% (≈52%)." },
+      { p:2, tag:"fin", q:"2,000,000 calls/year, AHT = 6 min. How many annualized hours?", opts:["120,000","200,000","333,333","12,000,000"], ans:1, exp:"Annualized Hours = 2,000,000 × 6 ÷ 60 = 200,000 hours." },
+      { p:2, tag:"fin", q:"With 200,000 annual hours and NO shrinkage, how many agents needed? (52 wks, 5 days, 8h)", opts:["52.5","96.2","107.1","139"], ans:1, exp:"Annual hours/person = 52×5×8 = 2,080. HC = 200,000 ÷ 2,080 = 96.2 agents." },
+      { p:2, tag:"fin", q:"Adding 10.2% Not-In-Office shrinkage to the 96.2 base, how many agents now?", opts:["96.2","101.8","107.1","119.6"], ans:2, exp:"Effective hours = 2,080 × 89.8% = 1,867.84. HC = 200,000 ÷ 1,867.84 = 107.1 agents." },
+      { p:2, tag:"fin", q:"Adding In-Office shrinkage (10.4%) on top of Not-In-Office (10.2%), agents needed?", opts:["107.1","112.2","119.6","139"], ans:2, exp:"Effective = 2,080 × 0.898 × 0.896 = 1,673.58. HC = 200,000 ÷ 1,673.58 = 119.6 agents." },
+      { p:2, tag:"fin", q:"Adding Occupancy (86%) on top of both shrinkages, TOTAL agents needed?", opts:["119.6","125.6","136.4","139"], ans:3, exp:"Effective = 2,080 × 0.898 × 0.896 × 0.86 = 1,439.28. HC = 200,000 ÷ 1,439.28 = 139 agents." },
+      { p:2, tag:"kpi", q:"Missing hours = 27, Scheduled = 126. What is absenteeism %?", opts:["15%","18%","21%","24%"], ans:2, exp:"Absenteeism = 27 ÷ 126 = 21.43% ≈ 21%." },
+      { p:2, tag:"kpi", q:"2 heads left out of 10 total. What is attrition?", opts:["10%","15%","20%","25%"], ans:2, exp:"Attrition = 2 ÷ 10 = 20%." },
+      { p:2, tag:"kpi", q:"SLA target is 80/30. Calls answered in 30s = 12,184. Total calls = 15,683. SLA achieved?", opts:["72%","75%","78%","82%"], ans:2, exp:"SLA = 12,184 ÷ 15,683 = 77.7% ≈ 78%. Target was 80%, so this is MISSED." },
+      { p:2, tag:"fin", q:"Login-hour billing. 100 agents, 15% absence vs 10% planned, 8h shift, $22/hr. Daily MLOTT?", opts:["$440","$660","$880","$1,100"], ans:2, exp:"MLOTT = 100 × (15%-10%) × 8 × $22 = 100 × 0.05 × 8 × 22 = $880/day." },
+      { p:2, tag:"fin", q:"Not-In-Office shrinkage: 260 working days, 17 holidays, 4.6 absence, 5 other. What % shrinkage?", opts:["8.5%","10.2%","12.4%","15.0%"], ans:1, exp:"Total lost = 17+4.6+5 = 26.6 days. Shrinkage = 26.6 ÷ 260 = 10.23% ≈ 10.2%." },
+      { p:2, tag:"fin", q:"In-Office: 480 min day, Breaks=30, Coaching/Training=17, Other=3. Production Mode %?", opts:["85.4%","87.2%","89.6%","92.1%"], ans:2, exp:"Total lost = 50 min. In-Office shrinkage = 50÷480 = 10.4%. Production Mode = 100%-10.4% = 89.6%." },
+      { p:2, tag:"fin", q:"Production minutes = 430, Available time = 60. What is Occupancy?", opts:["82%","84%","86%","88%"], ans:2, exp:"Available % = 60 ÷ 430 = 14%. Occupancy = 100% - 14% = 86%." },
+      { p:2, tag:"coach", q:"An agent has declining NPS. You prepare for coaching. What's the FIRST thing in your prep?", opts:["Write the action items","Review their rank from DPR and trend of failed KPI","Schedule a team meeting","Ask their peer about them"], ans:1, exp:"Pre-coaching prep starts with: Summary showing overall rank from the DPR and the trend of the failed KPI." },
+      { p:2, tag:"rca", q:"NPS dropped from 49% to 42% WoW. The client wants a case study. What is your FIRST step?", opts:["Write an action plan immediately","Blame the outage calls","Verify the supervisor's observations from the raw data","Ask for more time"], ans:2, exp:"Step 1: VERIFY observations from raw data. Validate with data first, then identify root cause." },
+      { p:2, tag:"pm", q:"Your Q4 agent has been coached twice but shows no improvement. Next step?", opts:["Move them to Q3 automatically","Focus on development and assign support tasks","RCA → Follow up → Accountability → Repeat the cycle","Give them a final warning immediately"], ans:2, exp:"Q4 action: RCA → Follow Up → Accountability → Repeat. The cycle continues." },
+      { p:2, tag:"fin", q:"$10,000 investment in CSAT training. Returns decline from $2,000/mo to $0 over 11 months. Total return?", opts:["$10,000","$11,000","$1,000 net","$21,000"], ans:2, exp:"Total returns = $2,000+1,800+...+0 = $11,000. Net = $11,000 - $10,000 = $1,000 net positive." },
+      { p:2, tag:"fin", q:"Penalty: 4% of billing ($22,000). OT corrective cost: $26,750. Revenue improvement: $49,500. Should you do it?", opts:["No — the cost exceeds the penalty avoided","Yes — net outcome is +$22,750","Need more data to decide","Only if the client requests it"], ans:1, exp:"Corrective cost = $26,750. Revenue improvement = $49,500. Net = +$22,750. Positive outcome — plan the overtime." },
+      { p:2, tag:"coach", q:"During coaching, the agent says 'I don't have enough time to follow the process.' What do you do?", opts:["Agree and reduce their workload","Say NO, the process must be followed","Highlight loopholes: 'If time is the issue, why do some agents with the same volume succeed?'","Ignore the excuse and move on"], ans:2, exp:"Don't say NO. Create a loophole: point out that others with the same conditions succeed." },
+      { p:2, tag:"kpi", q:"What is the financial impact of high Attrition? (Select the MOST complete answer)", opts:["Just recruitment costs","SLA drops, penalties, and financial loss from recruitment + training + overtime + reduced new-hire productivity","Only training costs","Only the cost of overtime to cover the gap"], ans:1, exp:"Attrition causes: SLA drop (understaffing → penalties), recruitment costs, training salary, overtime to cover, reduced productivity of new hires." },
+      { p:2, tag:"pm", q:"IC Components flow: SHRINKAGE is split into ___ and ___?", opts:["Morning and Afternoon","Planned and Unplanned","Onsite and Offsite","Paid and Unpaid"], ans:2, exp:"Shrinkage is split into OFFSITE (ABS: CL, SK, ANX) and ONSITE (BR, OFF Qs, etc.)." },
+      { p:2, tag:"fin", q:"Why is an 'appropriate profile mix' the best solution for staffing costs?", opts:["All high-profile agents guarantee best performance","All low-profile agents minimize cost","A mix balances cost competitiveness with the ability to hit KPIs/SLA","It doesn't matter — hire whoever is available"], ans:2, exp:"All-high = expensive, limited development. All-low = cheap but needs heavy training/coaching. A balanced mix optimizes both cost and performance." },
+      { p:2, tag:"rca", q:"What is the common pitfall of Deep Dive analysis?", opts:["It's too simple","Drowning in data without synthesizing, or building backward from a narrative instead of letting data drive insights","It doesn't use enough data","It can only be done by management"], ans:1, exp:"Deep Dive pitfall: overcomplicating scope, drowning in data without synthesizing actionable findings, or building the story first and cherry-picking data to fit." },
+      { p:2, tag:"fin", q:"IT equipment: 10 laptops × $899 = $8,990. Depreciation period = 3 years. Monthly P&L impact?", opts:["$8,990","$2,997","$249","$0"], ans:2, exp:"Monthly depreciation = $8,990 ÷ 36 months = $249.72 ≈ $249/month on the P&L." },
+
+      // PHASE 4
+      { p:3, tag:"fin", q:"Your billing model is Per Productive Hour. AHT dropped 30 seconds. What's the likely revenue impact?", opts:["Revenue increases — more calls handled","Revenue decreases — fewer billable productive minutes","No impact — billing is per hour","Revenue stays the same — only cost changes"], ans:1, exp:"Per Productive Hour = paid for handle time. Less AHT = fewer billable minutes. Revenue could DECREASE." },
+      { p:3, tag:"fin", q:"What is the Triple Constraint and why does it matter?", opts:["Cost ↔ Revenue ↔ KPIs — changing one always affects the others","Time ↔ Quality ↔ Scope — standard project management","People ↔ Process ↔ Technology — organizational framework","Input ↔ Output ↔ Feedback — systems thinking"], ans:0, exp:"Triple Constraints: Cost ↔ Revenue ↔ KPIs. Cutting cost may impact KPIs or revenue. Always model the NET impact." },
+      { p:3, tag:"coach", q:"You're using GROW. The agent set a goal but when assessing Reality, their score is much worse than they thought. What's the best response?", opts:["Change the goal to something easier","Let the reality sink in — this creates motivation to bridge the gap","Skip Reality and go straight to Options","Tell them their goal is unrealistic"], ans:1, exp:"The power of Reality in GROW is the gap it reveals between where they are and where they want to be. This gap creates natural motivation." },
+      { p:3, tag:"pm", q:"A Q2 agent wants to know why they're not getting promoted. What's your approach?", opts:["Tell them to wait their turn","Motivate them, help with minor opportunities, and use development as a prize/reward","Move them to Q1 immediately","Tell them to focus on their weaknesses only"], ans:1, exp:"Q2 approach: Motivate — help with minor opportunities — use development as a prize." },
+      { p:3, tag:"fin", q:"You manage a Per Transaction account. Abandon rate is 5% vs expected 2%. Volume = 100,000 calls at $5.50 each. What's the MLOTT?", opts:["$5,500","$8,250","$11,000","$16,500"], ans:3, exp:"Excess abandons = 5%-2% = 3%. MLOTT = 3% × 100,000 × $5.50 = $16,500 in revenue left on the table." },
+      { p:3, tag:"kpi", q:"An agent has: Talk=400min, Hold=20min, ACW=30min, Available=50min, Paid=540min. Calculate Utilization AND Occupancy.", opts:["Util=83.3%, Occ=90%","Util=92.6%, Occ=90%","Util=90%, Occ=92.6%","Util=92.6%, Occ=83.3%"], ans:1, exp:"Productive = 400+20+30 = 450. Util = (450+50)÷540 = 92.6%. Occ = 450÷(450+50) = 90%." },
+      { p:3, tag:"fin", q:"You want to give 30 min extra coaching per week per agent. 100 agents, per-minute billing at $0.40/min. What's the weekly revenue impact?", opts:["No impact — coaching is offline","Loss of $1,200/week","Loss of $2,000/week","Gain of $2,000/week"], ans:2, exp:"30 min × 100 agents = 3,000 minutes offline. At $0.40/min = $1,200/week lost revenue." },
+      { p:3, tag:"rca", q:"Your team's CSAT dropped. Fishbone shows issues in People AND Process categories. What should you do?", opts:["Pick the easiest category to fix","Validate both categories with data, prioritize using Pareto, then address the vital few causes","Fix both simultaneously regardless of impact","Ignore Process — people issues are always the root cause"], ans:1, exp:"Validate with data (don't assume). Use Pareto to identify which specific causes have the highest impact." },
+      { p:3, tag:"pm", q:"During peak hours, IC is failing despite overall SLA being met. What operational action should you take?", opts:["Ignore it — SLA is being met","Redistribute agents from over-staffed intervals to under-staffed peak intervals","Hire more agents","Reduce AHT across the board"], ans:1, exp:"IC failure during peaks means interval-level staffing gaps. Work with WFM to redistribute coverage." },
+      { p:3, tag:"fin", q:"Your SOW includes a 4% billing bonus for CSAT ≥ 90% and a -6.5% penalty for CSAT ≤ 80%. Current CSAT is 85%. You could invest $15K in training to push CSAT to 91%. Monthly billing is $200K. Is it worth it?", opts:["No — the current CSAT is acceptable","Yes — the 4% bonus ($8K/mo) will exceed the $15K investment within 2 months","Need 6 months of data to decide","Only if the client pays for the training"], ans:1, exp:"At CSAT 91% → 4% bonus = $200K × 4% = $8K/month. Investment pays back in < 2 months." },
+      { p:3, tag:"coach", q:"An agent consistently excels at AHT and CSAT but has high ACW. What coaching approach is best?", opts:["Punish the high ACW with a warning","Use GROW: Goal = reduce ACW, Reality = their current ACW vs target, Options = explore what they're doing in ACW, Will = agree on specific reduction steps","Ignore it — their other metrics are good","Tell them to stop doing ACW immediately"], ans:1, exp:"Use GROW systematically. Their strength in AHT/CSAT suggests they're thorough. Explore what they're doing in ACW." },
+      { p:3, tag:"fin", q:"What is the Gross Annual Hours per person formula?", opts:["365 × 24","52 × 5 × 8 = 2,080","260 × 8 = 2,080","Both B and C are correct"], ans:3, exp:"Both are the same: 52 weeks × 5 days × 8 hours = 2,080. Or: 260 business days × 8 hours = 2,080." },
+      { p:3, tag:"rca", q:"You did a 5 Whys and landed on 'lack of motivation' as the root cause. Is this acceptable?", opts:["Yes — motivation is always the root cause","No — 'lack of motivation' is vague. Keep asking WHY they lack motivation","It depends on the manager's judgment","Yes — if the agent admits it"], ans:1, exp:"'Lack of motivation' is vague. Ask: WHY are they unmotivated? Dig deeper." },
+      { p:3, tag:"pm", q:"For the EOS (End of Shift) handover, what must the Shift Manager include?", opts:["Only the IC status","IC status, attendance feedback, ABS, and confirmation that coaching/training has been fulfilled","Just a verbal summary to the next shift","Only the attendance numbers"], ans:1, exp:"EOS handover email must include: IC status, attendance feedback, ABS details, and confirmation that coaching/training sessions were completed." },
+      { p:3, tag:"kpi", q:"What does it mean when Occupancy is too HIGH (e.g., 95%+)?", opts:["Excellent efficiency — the team is performing great","Agents are back-to-back with no break between calls — risk of burnout, higher absenteeism, higher attrition, higher AHT","It means we need more agents","It means SLA is being exceeded"], ans:1, exp:"Very high occupancy = agents never get a break between calls. This leads to burnout." },
+      { p:3, tag:"fin", q:"Revenue = $28,600. Direct Costs = $18,590. OPEX = $4,200. What is Operating Income?", opts:["$10,010","$5,810","$14,010","$24,400"], ans:1, exp:"GM = $28,600 - $18,590 = $10,010. OI = GM - OPEX = $10,010 - $4,200 = $5,810." },
+      { p:3, tag:"coach", q:"What are the 4 types of evidence in pre-coaching Hard Evidence?", opts:["DPR, Scorecard, Attendance, Survey","Monitoring, Spot check, Analysis, Verbatim","KPIs, SLA, IC, CSAT","Calls, Emails, Chats, Tickets"], ans:1, exp:"Hard Evidence = Monitoring results + Spot checks + Analysis data + Verbatim feedback." },
+      { p:3, tag:"fin", q:"Bonuses are often calculated over a quarter. If you're ahead in months 1-2, what can you do in month 3?", opts:["Reduce staffing to cut costs","Grant more leaves or do morale-building activities and still hit the quarterly target","Push for even higher performance","Nothing — maintain the same pace"], ans:1, exp:"If ahead early in the quarter, you have room to grant leaves or run morale activities in the last month." },
+      { p:3, tag:"kpi", q:"3,000,000 calls/year, AHT=8min, Not-In-Office=12%, In-Office=11%, Occupancy=84%. How many agents needed?", opts:["192","219","245","292"], ans:3, exp:"Hours = 3M×8÷60 = 400K. Effective = 2,080×0.88×0.89×0.84 = 1,368.4. HC = 400K÷1,368.4 = 292.3 ≈ 292 agents." },
+      { p:3, tag:"pm", q:"Can you hit SLA target but still face financial penalties?", opts:["No — SLA is the only metric that matters","Yes — if other metrics like CSAT, NPS, quality, or IC fall below contractual thresholds","Only if the client is unreasonable","Only in Per Transaction billing"], ans:1, exp:"Penalties can be tied to many metrics: CSAT, NPS, quality scores, ASA, abandon rate, IC — not just SLA." },
+      { p:3, tag:"fin", q:"What is a SOW (Statement of Work)?", opts:["A verbal agreement between vendor and client","A document defining project-specific activities, deliverables, timelines, billing, and KPIs for the vendor","A marketing proposal","An internal HR document"], ans:1, exp:"SOW = the contract defining scope, deliverables, timelines, billing model, KPIs, bonuses, penalties." },
+      { p:3, tag:"rca", q:"When should you use a Fishbone diagram instead of 5 Whys?", opts:["When the problem is simple with 1 cause","When the problem has multiple contributing factors from different categories and needs structured brainstorming","When you don't have time for analysis","When the client requests it specifically"], ans:1, exp:"Fishbone is for multi-factor problems with unclear causes spanning People, Process, Tools, etc." },
+      { p:3, tag:"fin", q:"Per-Minute billing. Minimum monthly minute handling is 80%. You achieve 75%. Penalty = 4% of billing ($22K). Unhandled volume = $137.5K. OT at 1.5x costs $26.75K and recovers $49.5K. Net outcome?", opts:["Loss of $22,750","Break even","Gain of $22,750","Gain of $49,500"], ans:2, exp:"Corrective cost = $26,750. Revenue improvement = $49,500. Net = $49,500 - $26,750 = +$22,750." },
+      { p:3, tag:"coach", q:"What makes the Endowment Effect the BEST tool for solving 'The Will' in GROW?", opts:["It punishes non-compliance","It gives the agent a sense of OWNERSHIP — people commit to what they feel is their own decision, not an instruction","It's the simplest technique","It eliminates the need for follow-up"], ans:1, exp:"People commit to what they own. The Endowment Effect transforms an instruction into the agent's own decision." },
+      { p:3, tag:"kpi", q:"1,200 calls/day at €5. 150 agent hrs at €14. 25 sup hrs at €17. What is GM%?", opts:["42.1%","52.0%","57.9%","62.5%"], ans:2, exp:"Revenue = 1,200×5 = €6,000. Cost = (150×14)+(25×17) = 2,100+425 = €2,525. GM = 6,000-2,525 = €3,475. GM% = 3,475÷6,000 = 57.9%." }
+    ];
+
+    let scores = [null, null, null, null];
+    let currentPhase = null;
+    let currentQ = 0;
+    let currentAnswers = [];
+    let answered = false;
+
+    function render() {
+      if (currentPhase === null) { renderHome(); }
+      else { renderQuiz(); }
+    }
+
+    function renderHome() {
+      let html = `
+        <div class="bg-[var(--card)] rounded-xl border border-[var(--border)] p-4 sm:p-6 mb-4 mx-2 sm:mx-0 shadow-sm">
+          <h2 class="text-xl font-bold mb-1">📝 Assessment Quiz Center</h2>
+          <p class="text-[var(--muted-foreground)] text-sm mb-4">4 Phases × 25 Questions = 100 Questions covering ALL topics</p>
+          <div class="space-y-3">`;
+
+      PHASES.forEach((phase, i) => {
+        const qs = ALL_QUESTIONS.filter(q => q.p === i);
+        const done = scores[i] !== null;
+        const pct = done ? Math.round(scores[i] / qs.length * 100) : 0;
+        const statusColor = done ? (pct >= 80 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444') : 'var(--border)';
+        html += `
+          <div class="border border-[var(--border)] rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer hover:border-[var(--primary)] transition-all" onclick="startPhase(${i})">
+            <div class="mb-3 sm:mb-0">
+              <div class="font-semibold text-lg sm:text-base">${phase.name}</div>
+              <div class="text-[var(--muted-foreground)] text-sm">${phase.desc}</div>
+              <div class="text-xs text-[var(--muted-foreground)] mt-1">${qs.length} questions</div>
+            </div>
+            <div class="sm:text-right">
+              ${done ? `<div class="text-2xl font-bold" style="color:${statusColor}">${pct}%</div><div class="text-xs text-[var(--muted-foreground)]">${scores[i]}/${qs.length} correct</div><div class="text-xs mt-1 cursor-pointer underline font-semibold" style="color:var(--primary)">Retake</div>` : `<div class="inline-block px-4 py-2 rounded-lg text-sm font-bold shadow-sm" style="background:var(--primary);color:var(--primary-foreground)">Start →</div>`}
+            </div>
+          </div>`;
+      });
+
+      const totalDone = scores.filter(s => s !== null).length;
+      const totalCorrect = scores.reduce((a, b) => a + (b || 0), 0);
+      const totalQs = totalDone * 25;
+
+      if (totalDone > 0) {
+        const overallPct = totalQs > 0 ? Math.round(totalCorrect / totalQs * 100) : 0;
+        html += `
+          </div>
+          <div class="mt-6 pt-4 border-t border-[var(--border)]">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="font-semibold text-lg">Overall Progress</div>
+                <div class="text-sm text-[var(--muted-foreground)]">${totalDone}/4 phases completed — ${totalCorrect}/${totalQs} correct</div>
+              </div>
+              <div class="text-3xl font-bold" style="color:${overallPct >= 80 ? '#22c55e' : overallPct >= 60 ? '#f59e0b' : '#ef4444'}">${overallPct}%</div>
+            </div>
+            <div class="w-full bg-[var(--secondary)] rounded-full h-3 mt-3">
+              <div class="h-3 rounded-full transition-all" style="width:${overallPct}%;background:${overallPct >= 80 ? '#22c55e' : overallPct >= 60 ? '#f59e0b' : '#ef4444'}"></div>
+            </div>
+          </div>`;
+      } else {
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+      document.getElementById('app').innerHTML = `<div class="pb-8 pt-2">${html}</div>`;
+    }
+
+    function startPhase(idx) {
+      currentPhase = idx;
+      currentQ = 0;
+      answered = false;
+      currentAnswers = [];
+      const qs = ALL_QUESTIONS.filter(q => q.p === idx);
+      // Shuffle questions within the phase
+      for (let i = qs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [qs[i], qs[j]] = [qs[j], qs[i]];
+      }
+      currentAnswers = new Array(qs.length).fill(null);
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderQuiz() {
+      const qs = ALL_QUESTIONS.filter(q => q.p === currentPhase);
+      const qData = qs[currentQ];
+      const tag = TAGS[qData.tag];
+      const pct = Math.round((currentQ) / qs.length * 100);
+      const correctSoFar = currentAnswers.filter((a, i) => i < currentQ && a === true).length;
+
+      let html = `
+        <div class="bg-[var(--card)] border-b border-[var(--border)] p-4 flex items-center justify-between mb-4 mx-2 sm:mx-0 rounded-xl shadow-sm">
+          <div class="flex items-center gap-3">
+            <button onclick="goHome()" class="text-sm font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--accent)] transition-all">← Back</button>
+            <span class="font-bold hidden sm:inline-block">${PHASES[currentPhase].name}</span>
+          </div>
+          <div class="text-sm font-semibold text-[var(--muted-foreground)] bg-[var(--secondary)] px-3 py-1 rounded-full">Q ${currentQ + 1} / ${qs.length} &nbsp;|&nbsp; Score: ${correctSoFar}</div>
+        </div>
+        <div class="px-2 sm:px-0">
+          <div class="w-full bg-[var(--secondary)] rounded-full h-2 mb-4 overflow-hidden">
+            <div class="h-2 rounded-full transition-all" style="width:${pct}%;background:var(--primary)"></div>
+          </div>
+          <div class="bg-[var(--card)] rounded-xl border border-[var(--border)] p-4 sm:p-6 fade-in shadow-sm">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="tag" style="background:${tag.color};color:white">${tag.label}</span>
+              <span class="text-sm text-[var(--muted-foreground)] font-semibold">Question ${currentQ + 1}</span>
+            </div>
+            <h3 class="text-lg sm:text-xl font-bold mb-5 leading-snug">${qData.q}</h3>
+            <div class="space-y-3" id="options">`;
+
+      qData.opts.forEach((opt, i) => {
+        html += `<button id="opt${i}" class="opt-btn w-full text-left px-5 py-4 rounded-xl border-2 border-[var(--border)] bg-[var(--content)] text-sm sm:text-base font-medium shadow-sm hover:border-[var(--primary)] focus:outline-none" onclick="selectAnswer(${i})"><span class="mr-2 font-bold text-[var(--muted-foreground)]">${String.fromCharCode(65 + i)}.</span> ${opt}</button>`;
+      });
+
+      html += `</div>
+            <div id="feedback" class="mt-5" style="display:none"></div>
+            <div id="nextBtn" class="mt-6" style="display:none">
+              <button onclick="nextQuestion()" class="w-full sm:w-auto px-8 py-3 rounded-xl text-base font-bold shadow-md transition-all" style="background:var(--primary);color:var(--primary-foreground)">${currentQ < qs.length - 1 ? 'Next Question →' : 'See Results →'}</button>
+            </div>
+          </div>
+        </div>`;
+
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function selectAnswer(idx) {
+      if (answered) return;
+      answered = true;
+      const qs = ALL_QUESTIONS.filter(q => q.p === currentPhase);
+      const qData = qs[currentQ];
+      const correct = idx === qData.ans;
+      currentAnswers[currentQ] = correct;
+
+      const btn = document.getElementById(`opt${idx}`);
+      btn.classList.add(correct ? 'correct' : 'wrong');
+
+      if (!correct) {
+        document.getElementById(`opt${qData.ans}`).classList.add('reveal');
+      }
+
+      // Disable all buttons
+      qData.opts.forEach((_, i) => {
+        document.getElementById(`opt${i}`).style.pointerEvents = 'none';
+      });
+
+      const fb = document.getElementById('feedback');
+      fb.style.display = 'block';
+      fb.innerHTML = `
+        <div class="p-4 rounded-xl text-sm sm:text-base shadow-inner" style="background:${correct ? 'rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3)'}">
+          <div class="font-bold mb-2 flex items-center text-lg">${correct ? '✅ Correct!' : '❌ Incorrect'}</div>
+          <div class="text-[var(--foreground)] leading-relaxed">${qData.exp}</div>
+        </div>`;
+
+      document.getElementById('nextBtn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+      const qs = ALL_QUESTIONS.filter(q => q.p === currentPhase);
+      if (currentQ < qs.length - 1) {
+        currentQ++;
+        answered = false;
+        render();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        showResults();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function showResults() {
+      const qs = ALL_QUESTIONS.filter(q => q.p === currentPhase);
+      const correct = currentAnswers.filter(a => a === true).length;
+      const total = qs.length;
+      const pct = Math.round(correct / total * 100);
+      scores[currentPhase] = correct;
+
+      const color = pct >= 80 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
+      const msg = pct >= 90 ? '🏆 Outstanding! You\'ve mastered this phase!' : pct >= 80 ? '🌟 Great job! You\'re well-prepared.' : pct >= 60 ? '📚 Good effort. Review the topics you missed.' : '💪 Keep studying. Review the playbook and try again.';
+
+      // Count by tag
+      const tagStats = {};
+      qs.forEach((q, i) => {
+        if (!tagStats[q.tag]) tagStats[q.tag] = { correct: 0, total: 0 };
+        tagStats[q.tag].total++;
+        if (currentAnswers[i]) tagStats[q.tag].correct++;
+      });
+
+      let tagHtml = '';
+      Object.keys(tagStats).forEach(t => {
+        const s = tagStats[t];
+        const tp = Math.round(s.correct / s.total * 100);
+        const tc = tp >= 80 ? '#22c55e' : tp >= 60 ? '#f59e0b' : '#ef4444';
+        tagHtml += `
+          <div class="flex items-center justify-between py-3 border-b border-[var(--border)]">
+            <span class="tag" style="background:${TAGS[t].color};color:white">${TAGS[t].label}</span>
+            <span class="font-bold" style="color:${tc}">${s.correct}/${s.total} (${tp}%)</span>
+          </div>`;
+      });
+
+      let html = `
+        <div class="px-2 sm:px-4 pb-8 pt-2">
+          <div class="bg-[var(--card)] rounded-xl border border-[var(--border)] p-6 sm:p-8 text-center fade-in shadow-md">
+            <div class="text-6xl sm:text-7xl font-bold mb-4" style="color:${color}">${pct}%</div>
+            <div class="text-xl sm:text-2xl font-bold mb-2 text-[var(--foreground)]">${PHASES[currentPhase].name} Complete</div>
+            <div class="text-[var(--muted-foreground)] mb-3 font-semibold text-lg">${correct} out of ${total} correct</div>
+            <div class="text-base sm:text-lg mb-8 font-medium">${msg}</div>
+            
+            <div class="text-left max-w-md mx-auto mb-8 bg-[var(--content)] p-4 rounded-xl border border-[var(--border)]">
+              <div class="font-bold mb-3 text-sm text-[var(--muted-foreground)] uppercase tracking-wide">Score by Topic</div>
+              ${tagHtml}
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <button onclick="startPhase(${currentPhase})" class="px-6 py-3 rounded-xl font-bold border-2 border-[var(--border)] hover:bg-[var(--accent)] transition-all">🔄 Retake</button>
+              <button onclick="goHome()" class="px-6 py-3 rounded-xl font-bold shadow-md transition-all" style="background:var(--primary);color:var(--primary-foreground)">Back to Dashboard</button>
+              ${currentPhase < 3 ? `<button onclick="startPhase(${currentPhase + 1})" class="px-6 py-3 rounded-xl font-bold shadow-md transition-all" style="background:#22c55e;color:white">Next Phase →</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function goHome() {
+      currentPhase = null;
+      render();
+    }
+
+    // Initialize Quiz Center
+    render();
+  </script>
+</body>
+</html>
